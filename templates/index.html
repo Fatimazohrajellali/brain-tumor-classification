@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classification des Tumeurs Cérébrales</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Classification des Tumeurs Cérébrales</h1>
+        <div class="upload-container">
+            <input type="file" id="file-input" accept="image/*">
+            <button id="upload-button">Télécharger l'image</button>
+            <img id="uploaded-image" src="#" alt="Votre image" style="display: none;">
+        </div>
+        <button id="predict-button">Classifier l'image</button>
+        <div id="result"></div>
+    </div>
+    <script>
+        document.getElementById('upload-button').onclick = function() {
+            document.getElementById('file-input').click();
+        };
+        document.getElementById('file-input').onchange = function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('uploaded-image').src = e.target.result;
+                    document.getElementById('uploaded-image').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        document.getElementById('predict-button').onclick = function() {
+            const fileInput = document.getElementById('file-input');
+            if (fileInput.files.length === 0) {
+                alert('Veuillez télécharger une image d\'abord.');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('result').innerText = `Erreur: ${data.error}`;
+                } else {
+                    document.getElementById('result').innerText = `Prédiction: ${data.prediction}`;
+                }
+            })
+            .catch(error => {
+                document.getElementById('result').innerText = `Erreur: ${error}`;
+            });
+        };
+    </script>
+</body>
+</html>
